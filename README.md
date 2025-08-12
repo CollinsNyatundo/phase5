@@ -8,10 +8,7 @@ The notebook and dataset outline a complete workflow for the GEO-AI Cropland Map
 - Feature Engineering
 - Exploratory Data Analysis (EDA)
 - Model Training
-- Important Notes & Recommendations
-- Reproducibility & Caching
-- Usage
-- Extending the Pipeline
+- Recommendations
 ## Business Understanding
 - **Goal**: Classify pixels/points as crop vs non-crop in target regions, producing per-location cropland probabilities or labels.
 - **Objectives**: Maximize competition score, produce interpretable regional reports, and have a reproducible pipeline.
