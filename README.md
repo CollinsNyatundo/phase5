@@ -78,7 +78,7 @@ VH_VV_ratio = VH / VV
 - Address class imbalance with SMOTE or related oversampling techniques.
 - Tune hyperparameters using Optuna.
 - Output cropland probability scores formatted for official competition submission.
-### Recommendations
+## Recommendations
 - Spatially aware train-test splits are critical.
 - Use cloud and quality masks to filter noisy satellite observations.
 - Feature engineering (vegetation indices) greatly improves class separability.
