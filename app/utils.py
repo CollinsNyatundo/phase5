@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -238,14 +238,4 @@ def format_number(x: float, digits: int = 3) -> str:
         return str(x)
 
 
-# Lottie helpers
-@st.cache_data(show_spinner=False)
-def load_lottie_url(url: str) -> Optional[Dict[str, Any]]:
-    try:
-        import requests
-        r = requests.get(url, timeout=10)
-        if r.status_code == 200:
-            return r.json()
-    except Exception:
-        return None
-    return None
+# Lottie helpers removed

@@ -17,6 +17,7 @@ if css:
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 st.title("🗺️ Interactive Cropland Maps")
+st.markdown('<div class="section-divider"><span class="label">Layers • Context • Insight</span></div>', unsafe_allow_html=True)
 
 st.markdown(
     """

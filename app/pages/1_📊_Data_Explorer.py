@@ -18,6 +18,7 @@ if css:
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 st.title("📊 Data Explorer")
+st.markdown('<div class="section-divider"><span class="label">Ingest • Explore • Export</span></div>', unsafe_allow_html=True)
 
 st.markdown("""
 <div class="content-intro">

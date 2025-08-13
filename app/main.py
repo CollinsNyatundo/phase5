@@ -12,7 +12,6 @@ try:
         load_metrics,
         load_css,
         inject_css_block,
-        load_lottie_url,
     )
 except Exception:
     from utils import (  # type: ignore
@@ -22,7 +21,6 @@ except Exception:
         load_metrics,
         load_css,
         inject_css_block,
-        load_lottie_url,
     )
 
 st.set_page_config(
@@ -71,8 +69,8 @@ inject_css_block(carousel_css)
 
 st.markdown("""
 <div class="main-header">
-  <h1>🌾 Cropland Mapping ML Suite</h1>
-  <p>Advanced Machine Learning for Agricultural Land Classification</p>
+  <h1 style="margin-bottom:0.25rem;">🌾 Agrivista ML Suite</h1>
+  <p style="opacity:0.9; letter-spacing:0.01em;">Advanced Machine Learning for Agricultural Land Classification</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -84,6 +82,7 @@ models = load_models()
 metrics = load_metrics()
 
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+st.markdown('<div class="section-divider"><span class="label">Data • Models • Maps • Explainability</span></div>', unsafe_allow_html=True)
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown(f"""
@@ -119,27 +118,17 @@ with col4:
     """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Optional Lottie section
-try:
-    from streamlit_lottie import st_lottie
-    colA, colB, colC = st.columns(3)
-    with colA:
-        lottie = load_lottie_url("https://assets5.lottiefiles.com/packages/lf20_1a8dx7zj.json")
-        if lottie: st_lottie(lottie, height=140, key="farm")
-    with colB:
-        st.markdown(
-            '<div class="metric-card" style="height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.5rem; margin:0; text-align:center;">\
-            <div style="font-size:0.9rem; margin:0 0 2px 0; opacity:0.9;">Best Accuracy</div>\
-            <div style="font-size:1.05rem; font-weight:600; margin:0 0 2px 0;">Random Forest</div>\
-            <div style="font-size:1.6rem; font-weight:800; margin:0;">74.1%</div>\
-            </div>',
-            unsafe_allow_html=True,
-        )
-    with colC:
-        lottie2 = load_lottie_url("https://assets2.lottiefiles.com/packages/lf20_qp1q7mct.json")
-        if lottie2: st_lottie(lottie2, height=140, key="data")
-except Exception:
-    pass
+# Compact highlight card (replaces previous animations)
+colB = st.columns(3)[1]
+with colB:
+    st.markdown(
+        '<div class="metric-card" style="height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.5rem; margin:0; text-align:center;">\
+        <div style="font-size:0.9rem; margin:0 0 2px 0; opacity:0.9;">Best Accuracy</div>\
+        <div style="font-size:1.05rem; font-weight:600; margin:0 0 2px 0;">Random Forest</div>\
+        <div style="font-size:1.6rem; font-weight:800; margin:0;">75.8%</div>\
+        </div>',
+        unsafe_allow_html=True,
+    )
 
 st.markdown("""
 <div class="glass-container">

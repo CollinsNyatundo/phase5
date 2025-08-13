@@ -1,4 +1,5 @@
 import streamlit as st
+import random
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -6,9 +7,9 @@ import plotly.graph_objects as go
 
 # Flexible import to tolerate different run contexts
 try:
-    from app.utils import load_models, get_feature_schema, load_css, load_lottie_url
+    from app.utils import load_models, get_feature_schema, load_css, inject_css_block
 except Exception:
-    from utils import load_models, get_feature_schema, load_css, load_lottie_url  # type: ignore
+    from utils import load_models, get_feature_schema, load_css, inject_css_block  # type: ignore
 
 st.set_page_config(page_title="🧠 Explainability", page_icon="🧠", layout="wide")
 
@@ -18,6 +19,7 @@ if css:
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 st.title("🧠 Model Explainability")
+st.markdown('<div class="section-divider"><span class="label">Explain • Compare • Act</span></div>', unsafe_allow_html=True)
 
 st.markdown(
     """
@@ -29,20 +31,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Optional Lottie header
-try:
-    from streamlit_lottie import st_lottie
-    c1, c2 = st.columns(2)
-    with c1:
-        l1 = load_lottie_url("https://assets10.lottiefiles.com/packages/lf20_tll0j4bb.json")  # AI/brain
-        if l1:
-            st_lottie(l1, height=120, key="exp_ai")
-    with c2:
-        l2 = load_lottie_url("https://assets2.lottiefiles.com/packages/lf20_qp1q7mct.json")  # data
-        if l2:
-            st_lottie(l2, height=120, key="exp_data")
-except Exception:
-    pass
+# Lottie animations removed for a leaner app footprint
 
 models = load_models()
 model_names = list(models.keys())
@@ -95,6 +84,19 @@ if len(X_source) > sample_size:
     X = X_source.sample(sample_size, random_state=42)
 else:
     X = X_source.copy()
+
+# Inject a lightweight, CSS-only loader we can show while computing
+loader_css = """
+.loader-bars { display:flex; gap:8px; align-items:flex-end; justify-content:center; height:42px; margin: 0.25rem 0 0.5rem; }
+.loader-bars .bar { width:10px; height:16px; background: var(--primary-color); border-radius: 6px; animation: loader-wave 1s ease-in-out infinite; box-shadow: 0 2px 8px rgba(16,185,129,0.25); }
+.loader-bars .bar:nth-child(2) { animation-delay: 0.08s; }
+.loader-bars .bar:nth-child(3) { animation-delay: 0.16s; }
+.loader-bars .bar:nth-child(4) { animation-delay: 0.24s; }
+.loader-bars .bar:nth-child(5) { animation-delay: 0.32s; }
+@keyframes loader-wave { 0%,100% { transform: scaleY(0.5); opacity: 0.6; } 50% { transform: scaleY(1.45); opacity: 1; } }
+.loader-caption { color: var(--text-secondary); font-size: 0.95rem; opacity: 0.9; }
+"""
+inject_css_block(loader_css)
 
 # Helper: get model output function for probability of class 1 when available
 def predict_function(model, data: pd.DataFrame) -> np.ndarray:
@@ -174,18 +176,34 @@ def sample_shap_for_feature(shap_values_obj, feature_idx: int, n_samples: int, n
         y = np.resize(y, n_samples)
     return y
 
-# Compute SHAP values (gracefully degrade)
+# Compute SHAP values (gracefully degrade) with fun loader
 shap_values = None
 explainer_name = ""
+loading_placeholder = st.empty()
+funny_lines = [
+    "Converting photons into insights… please hold the tractor!",
+    "Feeding satellite pixels to hungry SHAP gremlins…",
+    "Teaching the model to spot crops faster than a scarecrow…",
+    "Asking the AI to explain itself. It’s writing an essay…",
+    "Squeezing secrets out of spectral bands… like orange juice…",
+]
+caption = random.choice(funny_lines)
+loading_placeholder.markdown(
+    f"""
+    <div class=\"glass-container\" style=\"text-align:center;\">\n      <div class=\"loader-bars\">\n        <div class=\"bar\"></div><div class=\"bar\"></div><div class=\"bar\"></div><div class=\"bar\"></div><div class=\"bar\"></div>\n      </div>\n      <div class=\"loader-caption\">{caption}</div>\n    </div>
+    """,
+    unsafe_allow_html=True,
+)
 try:
-    import shap
-    # shap >= 0.39 supports auto Explainer selection
-    explainer = shap.Explainer(mdl, X, feature_names=list(X.columns))
-    shap_values = explainer(X)
-    explainer_name = explainer.__class__.__name__
-except Exception as e:
-    shap_values = None
-    st.warning(f"SHAP explainability unavailable: {e}")
+    with st.spinner("Summoning SHAP sprites… brewing explanations"):
+        import shap
+        explainer = shap.Explainer(mdl, X, feature_names=list(X.columns))
+        shap_values = explainer(X)
+        explainer_name = explainer.__class__.__name__
+finally:
+    loading_placeholder.empty()
+if shap_values is None:
+    st.warning("SHAP explainability unavailable. Try a smaller sample or upload a compact CSV.")
 
 # Tabs for visualizations
 tabs = st.tabs(["Overview", "Feature Importance", "Dependence", "PDP / ICE"]) 
@@ -201,6 +219,22 @@ with tabs[0]:
         st.metric("Data source", source_label or "(unknown)")
     st.markdown('</div>', unsafe_allow_html=True)
 
+    st.markdown(
+        """
+        <div class="feature-guidance">
+            <span class="icon">ℹ️</span>
+            <strong>What you are seeing</strong>
+            <ul>
+                <li><b>SHAP</b> explains a prediction by assigning each feature a contribution (positive pushes prediction up; negative pushes it down).</li>
+                <li><b>Mean |SHAP|</b> aggregates absolute contributions across samples to rank features by overall impact.</li>
+                <li>Values are relative to the model's <b>baseline</b> (expected prediction over the sample).</li>
+            </ul>
+            <em>Tip:</em> Use a representative sample size (sidebar) for stable insights.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     if shap_values is not None:
         try:
             mean_abs = mean_abs_shap_per_feature(shap_values)
@@ -211,6 +245,20 @@ with tabs[0]:
             fig = px.bar(imp_df.head(top_k), x="importance", y="feature", orientation='h', title="Mean |SHAP| by feature")
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig, use_container_width=True)
+            st.markdown(
+                """
+                <div class="feature-guidance">
+                    <span class="icon">📊</span>
+                    <strong>How to read this</strong>
+                    <ul>
+                        <li>Bars show average absolute impact on the prediction: longer bar ⇒ stronger influence.</li>
+                        <li>Highly <b>correlated features</b> may share credit; consider grouping or domain checks.</li>
+                        <li>Use <b>Top features</b> slider (sidebar) to adjust how many you review.</li>
+                    </ul>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
         except Exception as e:
             st.info(f"Unable to compute SHAP importances: {e}")
     else:
@@ -252,6 +300,20 @@ with tabs[2]:
             fig.add_hline(y=0, line_dash="dash", opacity=0.5)
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig, use_container_width=True)
+            st.markdown(
+                """
+                <div class="feature-guidance">
+                    <span class="icon">🧭</span>
+                    <strong>Interpretation</strong>
+                    <ul>
+                        <li><b>X‑axis</b>: feature value; <b>Y‑axis</b>: contribution to prediction (↑ increases, ↓ decreases).</li>
+                        <li><b>Color</b> a second feature to reveal potential <b>interactions</b> (e.g., effect depends on another variable).</li>
+                        <li>Patterns show <b>non‑linear</b> effects; a flat cloud ⇒ weak influence in this region.</li>
+                    </ul>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
         except Exception as e:
             st.warning(f"Could not render dependence plot: {e}")
     else:
@@ -289,5 +351,19 @@ with tabs[3]:
         fig_pdp.update_layout(title=f"PDP/ICE for {feat}", xaxis_title=feat, yaxis_title="Model output",
                               paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_pdp, use_container_width=True)
+        st.markdown(
+            """
+            <div class="feature-guidance">
+                <span class="icon">🧩</span>
+                <strong>PDP vs ICE</strong>
+                <ul>
+                    <li><b>PDP</b> (thick line): average effect of changing the feature while keeping others fixed at median.</li>
+                    <li><b>ICE</b> (thin lines): effect per individual sample; spread indicates <b>heterogeneous</b> behavior or interactions.</li>
+                    <li>Y‑axis is the model output (e.g., probability for class 1); look for thresholds and saturations.</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     except Exception as e:
         st.warning(f"Could not compute PDP/ICE: {e}")

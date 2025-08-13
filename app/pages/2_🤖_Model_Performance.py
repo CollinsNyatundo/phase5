@@ -18,6 +18,7 @@ if css:
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 st.title("🤖 Model Performance Dashboard")
+st.markdown('<div class="section-divider"><span class="label">Compare • Evaluate • Select</span></div>', unsafe_allow_html=True)
 
 st.markdown("""
 <div class="content-intro">
@@ -57,7 +58,7 @@ for col, metric_name in zip([colA, colB, colC], ["Accuracy", "F1", "ROC_AUC"]):
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Tabs for charts
-tabs = st.tabs(["Bars", "Radar", "3D", "Table"]) 
+tabs = st.tabs(["Bars", "Radar", "3D", "Table"])
 
 with tabs[0]:
     metric = st.selectbox("Select Metric", ["Accuracy", "F1", "ROC_AUC"], index=0)
