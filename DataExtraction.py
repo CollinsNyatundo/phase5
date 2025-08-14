@@ -125,7 +125,7 @@ def download_satellite_data():
         return False
 
 if __name__ == "__main__":
-    print("🛰️ Satellite Data Downloader")
+    print(" Satellite Data Downloader")
     print("=" * 40)
     
     success = download_satellite_data()
