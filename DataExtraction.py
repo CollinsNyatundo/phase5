@@ -131,8 +131,8 @@ if __name__ == "__main__":
     success = download_satellite_data()
     
     if success:
-        print("\n✅ All files downloaded successfully!")
+        print("\n All files downloaded successfully!")
     else:
-        print("\n⚠️ Some files failed to download")
+        print("\n Some files failed to download")
     
     print("\nNext step: Run your cropland classification notebook")
